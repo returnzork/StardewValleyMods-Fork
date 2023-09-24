@@ -12,9 +12,12 @@ namespace FarmerHelper
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry
     {
+        private const int SPRING_SEEDS = 495, SUMMER_SEEDS = 496, FALL_SEEDS = 497, WINTER_SEEDS = 498, MIXED_SEEDS = 770;
+        private readonly static int[] IGNORE_SEEDS = new int[] { SPRING_SEEDS, SUMMER_SEEDS, FALL_SEEDS, WINTER_SEEDS, MIXED_SEEDS };
+
         private static bool Utility_tryToPlaceItem_Prefix(GameLocation location, Item item, int x, int y, ref bool __result )
         {
-            if (!Config.EnableMod || !Config.PreventLatePlant || (new int[] { 495, 496, 497, 498, 770 }).Contains(item.ParentSheetIndex) || !(item is Object) || ((Object)item).Category != -74)
+            if (!Config.EnableMod || !Config.PreventLatePlant || IGNORE_SEEDS.Contains(item.ParentSheetIndex) || !(item is Object) || ((Object)item).Category != -74)
                 return true;
             if (location.SeedsIgnoreSeasonsHere())
                 return true;
@@ -40,7 +43,7 @@ namespace FarmerHelper
             if (!location.terrainFeatures.TryGetValue(placementTile, out TerrainFeature f) || f is not HoeDirt)
                 return true;
 
-            if ((new int[] { 495, 496, 497, 498, 770 }).Contains(__instance.ParentSheetIndex))
+            if (IGNORE_SEEDS.Contains(__instance.ParentSheetIndex))
                 return true;
 
             if (location.SeedsIgnoreSeasonsHere())
@@ -62,7 +65,7 @@ namespace FarmerHelper
                 return;
 
             Crop crop = new Crop(hoveredItem.ParentSheetIndex, 0, 0);
-            if (crop == null || crop.phaseDays.Count == 0 || !crop.seasonsToGrowIn.Contains(Game1.currentSeason) || EnoughDaysLeft(crop, null) || (new int[] { 495, 496, 497, 498, 770 }).Contains(hoveredItem.ParentSheetIndex))
+            if (crop == null || crop.phaseDays.Count == 0 || !crop.seasonsToGrowIn.Contains(Game1.currentSeason) || EnoughDaysLeft(crop, null) || IGNORE_SEEDS.Contains(hoveredItem.ParentSheetIndex))
                 return;
 
             hoverTitle = string.Format(SHelper.Translation.Get("too-late"), hoverTitle);

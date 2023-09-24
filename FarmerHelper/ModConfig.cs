@@ -10,6 +10,7 @@ namespace FarmerHelper
         public bool IgnoreFlowers { get; set; } = true;
         public bool LabelLatePlanting { get; set; } = true;
         public bool PreventLatePlant { get; set; } = true;
+        public bool PreventLatePlantSeasonSeeds { get; set; } = true;
         public bool WarnAboutPlantsUnwateredBeforeSleep { get; set; } = true;
         public bool WarnAboutPlantsUnharvestedBeforeSleep { get; set; } = true;
         public bool WarnAboutAnimalsOutsideBeforeSleep { get; set; } = true;

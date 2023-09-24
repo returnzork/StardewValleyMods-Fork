@@ -13,7 +13,7 @@ namespace FarmerHelper
     public partial class ModEntry
     {
         private const int SPRING_SEEDS = 495, SUMMER_SEEDS = 496, FALL_SEEDS = 497, WINTER_SEEDS = 498, MIXED_SEEDS = 770;
-        private readonly static int[] IGNORE_SEEDS = new int[] { SPRING_SEEDS, SUMMER_SEEDS, FALL_SEEDS, WINTER_SEEDS, MIXED_SEEDS };
+        private static int[] IGNORE_SEEDS => Config.PreventLatePlantSeasonSeeds ? new int[] { MIXED_SEEDS } : new int[] { SPRING_SEEDS, SUMMER_SEEDS, FALL_SEEDS, WINTER_SEEDS, MIXED_SEEDS };
 
         private static bool Utility_tryToPlaceItem_Prefix(GameLocation location, Item item, int x, int y, ref bool __result )
         {

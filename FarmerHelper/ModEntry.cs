@@ -79,6 +79,12 @@ namespace FarmerHelper
             );
             configMenu.AddBoolOption(
                 mod: ModManifest,
+                name: () => "Prevent late planting of season seeds?",
+                getValue: () => Config.PreventLatePlantSeasonSeeds,
+                setValue: value => Config.PreventLatePlantSeasonSeeds = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
                 name: () => "Warn plants unwatered?",
                 getValue: () => Config.WarnAboutPlantsUnwateredBeforeSleep,
                 setValue: value => Config.WarnAboutPlantsUnwateredBeforeSleep = value

@@ -3,6 +3,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.TerrainFeatures;
+using System.Linq;
 
 namespace FarmerHelper
 {
@@ -88,7 +89,7 @@ namespace FarmerHelper
                 name: () => "Warn plants unwatered?",
                 getValue: () => Config.WarnAboutPlantsUnwateredBeforeSleep,
                 setValue: value => Config.WarnAboutPlantsUnwateredBeforeSleep = value
-            );;
+            ); ;
             configMenu.AddBoolOption(
                 mod: ModManifest,
                 name: () => "Ignore Flowers?",
@@ -131,16 +132,16 @@ namespace FarmerHelper
             Helper.GameContent.InvalidateCache("Data/ObjectInformation");
         }
 
-        public static string[] seasons = new string[] { "spring", "summer", "fall", "winter" };
+        public static Season[] seasons = new Season[] { Season.Spring, Season.Summer, Season.Fall, Season.Winter };
         private static bool EnoughDaysLeft(Crop c, HoeDirt hoeDirt)
         {
-            if (c.seasonsToGrowIn.Contains(seasons[(Utility.getSeasonNumber(Game1.currentSeason) + 1) % 4]))
-                return true;
-            if(hoeDirt is not null)
+            if (c.GetData().Seasons.Contains(seasons[(Utility.getSeasonNumber(Game1.currentSeason) + 1) % 4]))
+                return true;            
+            if (hoeDirt is not null)
             {
                 HoeDirt d = new HoeDirt(hoeDirt.state.Value, c);
-                d.currentLocation = hoeDirt.currentLocation;
-                d.currentTileLocation = hoeDirt.currentTileLocation;
+                d.Location = hoeDirt.Location;
+                d.Tile = hoeDirt.Tile;
                 d.fertilizer.Value = hoeDirt.fertilizer.Value;
                 AccessTools.Method(typeof(HoeDirt), "applySpeedIncreases").Invoke(d, new object[] { Game1.player });
                 c = d.crop;

@@ -24,7 +24,7 @@ namespace FarmerHelper
             Vector2 tileLocation = new Vector2((float)(x / 64), (float)(y / 64));
             if (!location.terrainFeatures.TryGetValue(tileLocation, out TerrainFeature f) || f is not HoeDirt)
                 return true;
-            Crop c = new Crop(item.ParentSheetIndex, 0, 0);
+            Crop c = new Crop($"(O){item.ParentSheetIndex}", 0, 0, location);
             if (c == null)
                 return true;
             if (c.phaseDays.Count == 0 || EnoughDaysLeft(c, f as HoeDirt))
@@ -49,7 +49,7 @@ namespace FarmerHelper
             if (location.SeedsIgnoreSeasonsHere())
                 return true;
 
-            Crop c = new Crop(__instance.ParentSheetIndex, x, y);
+            Crop c = new Crop($"(O){__instance.ParentSheetIndex}", x, y, location);
             if (c == null)
                 return true;
             if (c.phaseDays.Count == 0 || EnoughDaysLeft(c, f as HoeDirt))
@@ -64,8 +64,9 @@ namespace FarmerHelper
             if (!Config.EnableMod || !Config.LabelLatePlanting || hoveredItem == null)
                 return;
 
-            Crop crop = new Crop(hoveredItem.ParentSheetIndex, 0, 0);
-            if (crop == null || crop.phaseDays.Count == 0 || !crop.seasonsToGrowIn.Contains(Game1.currentSeason) || EnoughDaysLeft(crop, null) || IGNORE_SEEDS.Contains(hoveredItem.ParentSheetIndex))
+            //TODO (returnzork): new GameLocation() is very likely incorect
+            Crop crop = new Crop($"(O){hoveredItem.ParentSheetIndex}", 0, 0, new GameLocation());
+            if (crop == null || crop.phaseDays.Count == 0 || !crop.GetData().Seasons.Contains(Game1.currentLocation.GetSeason()) || EnoughDaysLeft(crop, null) || IGNORE_SEEDS.Contains(hoveredItem.ParentSheetIndex))
                 return;
 
             hoverTitle = string.Format(SHelper.Translation.Get("too-late"), hoverTitle);
@@ -84,7 +85,8 @@ namespace FarmerHelper
                 {
                     if (terrainFeature is HoeDirt && (terrainFeature as HoeDirt).crop != null && !(terrainFeature as HoeDirt).hasPaddyCrop() && (terrainFeature as HoeDirt).state.Value == 0 && (terrainFeature as HoeDirt).crop.currentPhase.Value < (terrainFeature as HoeDirt).crop.phaseDays.Count - 1)
                     {
-                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Farm {terrainFeature.currentTileLocation.X},{terrainFeature.currentTileLocation.Y} is unwatered");
+                        //TODO (returnzork): the (X, Y) coords were changed from terrainFeature.currentTileLocation{x|y}, the new value may be incorrect
+                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Farm {terrainFeature.Tile.X} ,{terrainFeature.Tile.Y} is unwatered");
                         if (!added)
                         {
                             added = true;
@@ -96,7 +98,8 @@ namespace FarmerHelper
                 {
                     if (terrainFeature is HoeDirt && (terrainFeature as HoeDirt).crop != null && !(terrainFeature as HoeDirt).hasPaddyCrop() && (terrainFeature as HoeDirt).state.Value == 0 && (terrainFeature as HoeDirt).crop.currentPhase.Value < (terrainFeature as HoeDirt).crop.phaseDays.Count - 1)
                     {
-                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Greenhouse {terrainFeature.currentTileLocation.X},{terrainFeature.currentTileLocation.Y} is unwatered");
+                        //TODO (returnzork): the (X, Y) coords were changed from terrainFeature.currentTileLocation{x|y}, the new value may be incorrect
+                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Greenhouse {terrainFeature.Tile.X},{terrainFeature.Tile.Y} is unwatered");
                         if (!added)
                         {
                             added = true;
@@ -114,7 +117,8 @@ namespace FarmerHelper
                 {
                     if (terrainFeature is HoeDirt && (terrainFeature as HoeDirt).readyForHarvest() && (!Config.IgnoreFlowers || new Object((terrainFeature as HoeDirt).crop.indexOfHarvest.Value, 1, false, -1, 0).Category != -80) && (!ignoreCrops.Contains((terrainFeature as HoeDirt).crop?.indexOfHarvest.Value + "")))
                     {
-                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Farm {terrainFeature.currentTileLocation.X},{terrainFeature.currentTileLocation.Y} is ready to harvest");
+                        //TODO (returnzork): the (X, Y) coords were changed from terrainFeature.currentTileLocation{x|y}, the new value may be incorrect
+                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Farm {terrainFeature.Tile.X},{terrainFeature.Tile.Y} is ready to harvest");
                         if (!added)
                         {
                             added = true;
@@ -126,7 +130,8 @@ namespace FarmerHelper
                 {
                     if (terrainFeature is HoeDirt && (terrainFeature as HoeDirt).readyForHarvest())
                     {
-                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Greenhouse {terrainFeature.currentTileLocation.X},{terrainFeature.currentTileLocation.Y} is ready to harvest");
+                        //TODO (returnzork): the (X, Y) coords were changed from terrainFeature.currentTileLocation{x|y}, the new value may be incorrect
+                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Greenhouse {terrainFeature.Tile.X},{terrainFeature.Tile.Y} is ready to harvest");
                         if (!added)
                         {
                             added = true;
@@ -148,7 +153,7 @@ namespace FarmerHelper
                 bool added = false;
                 foreach (FarmAnimal animal in Game1.getFarm().Animals.Values)
                 {
-                    if (animal.currentProduce.Value > 0 && !animal.type.Value.Contains("Pig"))
+                    if (animal.currentProduce.Value != null && !animal.type.Value.Contains("Pig"))
                     {
                         logMessage.Add($"{animal.type.Value} {animal.Name} on farm is ready to harvest");
                         if (!added)
@@ -164,9 +169,9 @@ namespace FarmerHelper
                         continue;
                     foreach (FarmAnimal animal in (building.indoors.Value as AnimalHouse).animals.Values)
                     {
-                        if (animal.currentProduce.Value > 0 && !animal.type.Value.Contains("Pig"))
+                        if (animal.currentProduce.Value != null && !animal.type.Value.Contains("Pig"))
                         {
-                            logMessage.Add($"{animal.type.Value} {animal.Name} in {building.nameOfIndoors} is ready to harvest");
+                            logMessage.Add($"{animal.type.Value} {animal.Name} in {building.GetIndoorsName()} is ready to harvest");
 
                             if (!added)
                             {
@@ -200,7 +205,7 @@ namespace FarmerHelper
                     {
                         if (!animal.wasPet.Value && !animal.wasAutoPet.Value)
                         {
-                            logMessage.Add($"{animal.type.Value} {animal.Name} in {building.nameOfIndoors} needs petting");
+                            logMessage.Add($"{animal.type.Value} {animal.Name} in {building.GetIndoorsName()} needs petting");
 
                             if (!added)
                             {

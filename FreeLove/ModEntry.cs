@@ -4,12 +4,15 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Events;
+using StardewValley.GameData.Shops;
 using StardewValley.Locations;
 using StardewValley.Menus;
+using StardewValley.Pathfinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using xTile.Dimensions;
 
 namespace FreeLove
 {
@@ -155,11 +158,15 @@ namespace FreeLove
             // Path patches
             
             harmony.Patch(
-               original: AccessTools.Constructor(typeof(PathFindController), new Type[] { typeof(Character), typeof(GameLocation), typeof(Point), typeof(int), typeof(bool), typeof(bool) }),
+               original: AccessTools.Constructor(typeof(PathFindController), new Type[] { typeof(Character), typeof(GameLocation), typeof(Point), typeof(int), typeof(bool) }),
                prefix: new HarmonyMethod(typeof(PathFindControllerPatches), nameof(PathFindControllerPatches.PathFindController_Prefix))
             );
             harmony.Patch(
                original: AccessTools.Constructor(typeof(PathFindController), new Type[] { typeof(Character), typeof(GameLocation), typeof(Point), typeof(int), typeof(PathFindController.endBehavior) }),
+               prefix: new HarmonyMethod(typeof(PathFindControllerPatches), nameof(PathFindControllerPatches.PathFindController_Prefix))
+            );
+            harmony.Patch(
+               original: AccessTools.Constructor(typeof(PathFindController), new Type[] { typeof(Character), typeof(GameLocation), typeof(Point), typeof(int), typeof(PathFindController.endBehavior), typeof(int) }),
                prefix: new HarmonyMethod(typeof(PathFindControllerPatches), nameof(PathFindControllerPatches.PathFindController_Prefix))
             );
             harmony.Patch(
@@ -191,17 +198,12 @@ namespace FreeLove
             );
             
             harmony.Patch(
-               original: AccessTools.Method(typeof(GameLocation), "checkEventPrecondition"),
+               original: AccessTools.Method(typeof(GameLocation), "checkEventPrecondition", new Type[] { typeof(string), typeof(bool) }),
                prefix: new HarmonyMethod(typeof(LocationPatches), nameof(LocationPatches.GameLocation_checkEventPrecondition_Prefix))
-            );
-            
-            harmony.Patch(
-               original: AccessTools.Method(typeof(Desert), nameof(Desert.getDesertMerchantTradeStock)),
-               postfix: new HarmonyMethod(typeof(LocationPatches), nameof(LocationPatches.Desert_getDesertMerchantTradeStock_Postfix))
             );
 
             harmony.Patch(
-               original: AccessTools.Method(typeof(ManorHouse), nameof(ManorHouse.performAction)),
+               original: AccessTools.Method(typeof(ManorHouse), nameof(ManorHouse.performAction), new Type[] { typeof(string[]), typeof(Farmer), typeof(Location)  }),
                prefix: new HarmonyMethod(typeof(LocationPatches), nameof(LocationPatches.ManorHouse_performAction_Prefix))
             );
             
@@ -246,7 +248,7 @@ namespace FreeLove
             );
             
             harmony.Patch(
-               original: AccessTools.Method(typeof(Farmer), nameof(Farmer.isMarried)),
+               original: AccessTools.Method(typeof(Farmer), nameof(Farmer.isMarriedOrRoommates)),
                prefix: new HarmonyMethod(typeof(FarmerPatches), nameof(FarmerPatches.Farmer_isMarried_Prefix))
             );
 
@@ -288,7 +290,7 @@ namespace FreeLove
             );
             
             harmony.Patch(
-               original: AccessTools.Method(typeof(SocialPage), nameof(SocialPage.isMarriedToAnyone)),
+               original: AccessTools.Method(typeof(SocialPage.SocialEntry), nameof(SocialPage.SocialEntry.IsMarriedToAnyone)),
                prefix: new HarmonyMethod(typeof(UIPatches), nameof(UIPatches.SocialPage_isMarriedToAnyone_Prefix))
             );
 
@@ -305,7 +307,7 @@ namespace FreeLove
                prefix: new HarmonyMethod(typeof(EventPatches), nameof(EventPatches.Event_answerDialogueQuestion_Prefix))
             );
             harmony.Patch(
-               original: AccessTools.Method(typeof(Event), nameof(Event.command_loadActors)),
+               original: AccessTools.Method(typeof(Event.DefaultCommands), nameof(Event.DefaultCommands.LoadActors)),
                prefix: new HarmonyMethod(typeof(EventPatches), nameof(EventPatches.Event_command_loadActors_Prefix)),
                postfix: new HarmonyMethod(typeof(EventPatches), nameof(EventPatches.Event_command_loadActors_Postfix))
             );
@@ -314,7 +316,7 @@ namespace FreeLove
             // Game1 patches
 
             harmony.Patch(
-               original: AccessTools.Method(typeof(Game1), nameof(Game1.getCharacterFromName), new Type[] { typeof(string), typeof(bool), typeof(bool) }),
+               original: AccessTools.GetDeclaredMethods(typeof(Game1)).Where(m => m.Name == "getCharacterFromName" && m.ReturnType == typeof(NPC)).First(),
                prefix: new HarmonyMethod(typeof(Game1Patches), nameof(Game1Patches.getCharacterFromName_Prefix))
             );
 
@@ -325,12 +327,30 @@ namespace FreeLove
             return new FreeLoveAPI();
         }
 
-
         private void Content_AssetRequested(object sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
         {
             if (!Config.EnableMod)
                 return;
-            if (e.NameWithoutLocale.IsEquivalentTo("Data/Events/HaleyHouse"))
+            if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
+            {
+                e.Edit(delegate (IAssetData data)
+                {
+                    var dict = data.AsDictionary<string, ShopData>();
+                    try
+                    {
+                        for(int i = 0; i < dict.Data["DesertTrade"].Items.Count; i++)
+                        {
+                            if (dict.Data["DesertTrade"].Items[i].ItemId == "(O)808")
+                                dict.Data["DesertTrade"].Items[i].Condition = "PLAYER_FARMHOUSE_UPGRADE Current 1, !PLAYER_HAS_ITEM Current 808";
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                });
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Events/HaleyHouse"))
             {
                 e.Edit(delegate (IAssetData idata)
                 {
@@ -444,8 +464,8 @@ namespace FreeLove
                     NPC npc = Game1.getCharacterFromName(name);
                     if (npc != null && npc.Age < 2 && !(npc is Child))
                     {
-                        string dispo = Game1.content.Load<Dictionary<string, string>>("Data/NPCDispositions")[name];
-                        if (dispo.Split('/')[5] != "datable")
+                        
+                        if (Game1.characterData[npc.Name].CanBeRomanced)
                         {
                             Monitor.Log($"can edit schedule for {name}");
                             e.Edit(delegate (IAssetData idata)

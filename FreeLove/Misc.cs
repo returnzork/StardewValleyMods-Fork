@@ -76,33 +76,6 @@ namespace FreeLove
             }
         }
 
-        public static Dictionary<string, Dictionary<string, string>> relationships = new Dictionary<string, Dictionary<string, string>>();
-
-        public static void SetNPCRelations()
-        {
-            relationships.Clear();
-            Dictionary<string, string> NPCDispositions = SHelper.GameContent.Load<Dictionary<string, string>>("Data\\NPCDispositions");
-            foreach(KeyValuePair<string,string> kvp in NPCDispositions)
-            {
-                string[] relations = kvp.Value.Split('/')[9].Split(' ');
-                if (relations.Length > 0)
-                {
-                    relationships.Add(kvp.Key, new Dictionary<string, string>());
-                    for (int i = 0; i < relations.Length; i += 2)
-                    {
-                        try
-                        {
-                            relationships[kvp.Key].Add(relations[i], relations[i + 1].Replace("'", ""));
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-                }
-            }
-        }
-
         public static string GetRandomSpouse(Farmer f)
         {
             var spouses = GetSpouses(f, true);
@@ -168,7 +141,7 @@ namespace FreeLove
                     {
                         SMonitor.Log("made patio spouse: " + spouse.Name);
                         spouse.setUpForOutdoorPatioActivity();
-                        SMonitor.Log($"{spouse.Name} at {spouse.currentLocation.Name} {spouse.getTileLocation()}");
+                        SMonitor.Log($"{spouse.Name} at {spouse.currentLocation.Name} {spouse.TilePoint}");
                     }
                 }
             }
@@ -228,7 +201,7 @@ namespace FreeLove
                 { 
                     spouse.setTilePosition(farmHouse.getRandomOpenPointInHouse(myRand));
                     spouse.faceDirection(myRand.Next(0, 4));
-                    SMonitor.Log($"{spouse.Name} spouse random loc {spouse.getTileLocationPoint()}");
+                    SMonitor.Log($"{spouse.Name} spouse random loc {spouse.TilePoint}");
                     spouse.setRandomAfternoonMarriageDialogue(Game1.timeOfDay, farmHouse, false);
                 }
             }

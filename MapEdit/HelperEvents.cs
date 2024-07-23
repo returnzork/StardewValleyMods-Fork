@@ -34,6 +34,7 @@ namespace MapEdit
                             mapData.ReplaceWith(EditMap(e.Name.Name, mapData.Data, data));
 
                         });
+                        return;
                     }
                 }
             }
@@ -47,7 +48,7 @@ namespace MapEdit
         public static void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
         {
             GetMapCollectionData();
-            Game1.currentLocation.loadMap(Game1.currentLocation.mapPath.Value, true);
+            UpdateCurrentMap(true);
         }
 
 
@@ -132,6 +133,7 @@ namespace MapEdit
                     Game1.playSound(Config.ShowMenu ? "bigSelect" : "bigDeSelect");
                     SMonitor.Log($"Toggled menu: {Config.ShowMenu}");
                     SHelper.WriteConfig(Config);
+                    return;
                 }
                 if (MouseInMenu())
                 {

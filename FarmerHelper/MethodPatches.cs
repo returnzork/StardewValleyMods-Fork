@@ -24,7 +24,7 @@ namespace FarmerHelper
             Vector2 tileLocation = new Vector2((float)(x / 64), (float)(y / 64));
             if (!location.terrainFeatures.TryGetValue(tileLocation, out TerrainFeature f) || f is not HoeDirt)
                 return true;
-            Crop c = new Crop($"(O){item.ParentSheetIndex}", 0, 0, location);
+            Crop c = new Crop(item.ItemId, 0, 0, location);
             if (c == null)
                 return true;
             if (c.phaseDays.Count == 0 || EnoughDaysLeft(c, f as HoeDirt))
@@ -49,7 +49,7 @@ namespace FarmerHelper
             if (location.SeedsIgnoreSeasonsHere())
                 return true;
 
-            Crop c = new Crop($"(O){__instance.ParentSheetIndex}", x, y, location);
+            Crop c = new Crop(__instance.ItemId, x, y, location);
             if (c == null)
                 return true;
             if (c.phaseDays.Count == 0 || EnoughDaysLeft(c, f as HoeDirt))
@@ -65,7 +65,7 @@ namespace FarmerHelper
                 return;
 
             //TODO (returnzork): new GameLocation() is very likely incorect
-            Crop crop = new Crop($"(O){hoveredItem.ParentSheetIndex}", 0, 0, new GameLocation());
+            Crop crop = new Crop(hoveredItem.ItemId, 0, 0, new GameLocation());
             if (crop == null || crop.phaseDays.Count == 0 || !crop.GetData().Seasons.Contains(Game1.currentLocation.GetSeason()) || EnoughDaysLeft(crop, null) || IGNORE_SEEDS.Contains(hoveredItem.ParentSheetIndex))
                 return;
 
